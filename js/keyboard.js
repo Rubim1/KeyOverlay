@@ -9,6 +9,37 @@ const Keyboard = {
         return `keyoverlay_layout_${layoutName}`;
     },
 
+    getUrlLayoutOverride(layoutName) {
+        const params = new URLSearchParams(window.location.search);
+        const encodedLayoutName = params.get('layoutName');
+        const encodedLayoutData = params.get('layoutData');
+        if (!encodedLayoutData) {
+            return null;
+        }
+
+        if (encodedLayoutName && encodedLayoutName !== layoutName) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(decodeURIComponent(encodedLayoutData));
+        } catch (e) {
+            console.error('Failed to parse layoutData from URL', e);
+            return null;
+        }
+    },
+
+    getShareLayoutPayload() {
+        if (!this.currentLayoutName || !this.currentLayoutData) {
+            return null;
+        }
+
+        return {
+            layoutName: this.currentLayoutName,
+            layoutData: this.currentLayoutData
+        };
+    },
+
     loadLayout(layoutName) {
         if (!window.KeyLayouts || !window.KeyLayouts[layoutName]) {
             console.error('Layout not found:', layoutName);
@@ -17,6 +48,13 @@ const Keyboard = {
         this.currentLayoutName = layoutName;
         // Deep clone so edits don't mutate the original
         this.currentLayoutData = JSON.parse(JSON.stringify(window.KeyLayouts[layoutName]));
+
+        const urlOverride = this.getUrlLayoutOverride(layoutName);
+        if (urlOverride) {
+            this.currentLayoutData = urlOverride;
+            this.render(this.currentLayoutData);
+            return;
+        }
         
         // Check if there's a custom layout saved
         const customKey = this.getCustomLayoutStorageKey(layoutName);
