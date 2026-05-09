@@ -331,5 +331,11 @@ const Keyboard = {
             if (active) el.classList.add('active');
             else el.classList.remove('active');
         }
+    },
+
+    clearAllHighlights() {
+        Object.values(this.keyElements).forEach((el) => {
+            el.classList.remove('active');
+        });
     }
 };
